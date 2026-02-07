@@ -9,20 +9,20 @@ import SwiftUI
 
 struct MomentRow: View {
     let moment: Moment
+    var securityManager: SecurityManager
     let onDelete: () -> Void
     
     @State private var showDeleteAlert = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // 1. Display the Photo if it exists
-            if let data = moment.photoData, let uiImage = UIImage(data: data) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 200)
-                    .clipped()
-                    .cornerRadius(15)
+            // 1. Display the Encrypted Photo if it exists
+            if moment.encryptedPhotoData != nil {
+                SecureImageView(
+                    encryptedData: moment.encryptedPhotoData,
+                    securityManager: securityManager,
+                    height: 200
+                )
             }
             
             HStack {

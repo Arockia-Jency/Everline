@@ -11,7 +11,7 @@ import SwiftUI
 struct SecureImageView: View {
     let encryptedData: Data?
     let securityManager: SecurityManager
-    var contentMode: ContentMode = .fill
+    var contentMode: ImageContentMode = .fill
     var height: CGFloat? = nil
     var cornerRadius: CGFloat = 12
     
@@ -21,7 +21,7 @@ struct SecureImageView: View {
                let decryptedImage = securityManager.decryptImage(encryptedData) {
                 Image(uiImage: decryptedImage)
                     .resizable()
-                    .aspectRatio(contentMode: contentMode)
+                    .aspectRatio(contentMode: contentMode.swiftUIMode)
                     .frame(height: height)
                     .cornerRadius(cornerRadius)
                     .clipped()
@@ -47,9 +47,16 @@ struct SecureImageView: View {
 }
 
 /// Content mode for image rendering
-enum ContentMode {
+enum ImageContentMode {
     case fill
     case fit
+    
+    var swiftUIMode: ContentMode {
+        switch self {
+        case .fill: return .fill
+        case .fit: return .fit
+        }
+    }
 }
 
 #Preview {

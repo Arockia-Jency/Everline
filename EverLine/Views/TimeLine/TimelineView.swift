@@ -7,11 +7,25 @@ struct TimelineView: View {
     @State private var searchText = ""
     @State private var selectedMoodFilter: String? = nil
     
+    // Security Manager for photo decryption
+    var securityManager: SecurityManager
+    
     // Filtered list based on search and mood
     var filteredMoments: [Moment] {
         moments.filter { moment in
-            let matchesSearch = searchText.isEmpty || moment.title.localizedCaseInsensitiveContains(searchText)
-            let matchesMood = selectedMoodFilter == nil || moment.mood == selectedMoodFilter
+            let matchesSearch = searchText.isEmpty || 
+                moment.title.localizedCaseInsensitiveContains(searchText) ||
+                moment.notes.localizedCaseInsensitiveContains(searchText)
+            
+            let matchesMood: Bool
+            if let selectedMood = selectedMoodFilter {
+                // Support both exact match and partial match (case-insensitive)
+                matchesMood = moment.mood.localizedCaseInsensitiveContains(selectedMood) ||
+                              selectedMood.localizedCaseInsensitiveContains(moment.mood)
+            } else {
+                matchesMood = true
+            }
+            
             return matchesSearch && matchesMood
         }
     }
@@ -23,11 +37,20 @@ struct TimelineView: View {
                     // 1. Horizontal Mood Filter Bar
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
-                            FilterButton(title: "All", isSelected: selectedMoodFilter == nil) {
+                            FilterButton(
+                                title: "All",
+                                count: moments.count,
+                                isSelected: selectedMoodFilter == nil
+                            ) {
                                 selectedMoodFilter = nil
                             }
                             ForEach(Mood.allCases, id: \.self) { mood in
-                                FilterButton(title: mood.rawValue, isSelected: selectedMoodFilter == mood.rawValue) {
+                                let count = moments.filter { $0.mood.localizedCaseInsensitiveContains(mood.rawValue) }.count
+                                FilterButton(
+                                    title: mood.rawValue,
+                                    count: count,
+                                    isSelected: selectedMoodFilter == mood.rawValue
+                                ) {
                                     selectedMoodFilter = mood.rawValue
                                 }
                             }
@@ -37,12 +60,12 @@ struct TimelineView: View {
                     
                     // 2. The Timeline List
                     if filteredMoments.isEmpty {
-                        ContentUnavailableView.search(text: searchText)
+                        emptyStateView
                     } else {
                         LazyVStack(spacing: 16) {
                             ForEach(filteredMoments) { moment in
-                                NavigationLink(destination: MomentDetailView(moment: moment)) {
-                                    MomentRow(moment: moment) {
+                                NavigationLink(destination: MomentDetailView(moment: moment, securityManager: securityManager)) {
+                                    MomentRow(moment: moment, securityManager: securityManager) {
                                         deleteMoment(moment)
                                     }
                                 }
@@ -70,23 +93,101 @@ struct TimelineView: View {
         modelContext.delete(moment)
         try? modelContext.save()
     }
+    
+    // MARK: - Empty State
+    
+    @ViewBuilder
+    private var emptyStateView: some View {
+        VStack(spacing: 20) {
+            if moments.isEmpty {
+                // No moments at all
+                ContentUnavailableView(
+                    "No Moments Yet",
+                    systemImage: "heart.text.square",
+                    description: Text("Tap the + button to create your first memory together")
+                )
+            } else if !searchText.isEmpty && selectedMoodFilter != nil {
+                // Both search and filter active
+                ContentUnavailableView(
+                    "No Results",
+                    systemImage: "magnifyingglass",
+                    description: Text("No moments found matching '\(searchText)' with mood '\(selectedMoodFilter!)'")
+                )
+            } else if !searchText.isEmpty {
+                // Only search active
+                ContentUnavailableView.search(text: searchText)
+            } else if selectedMoodFilter != nil {
+                // Only filter active
+                VStack(spacing: 16) {
+                    Image(systemName: moodIcon(for: selectedMoodFilter!))
+                        .font(.system(size: 60))
+                        .foregroundStyle(.secondary)
+                    
+                    Text("No \(selectedMoodFilter!) Moments")
+                        .font(.title2.bold())
+                    
+                    Text("You haven't created any moments with this mood yet")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                    
+                    Button {
+                        selectedMoodFilter = nil
+                    } label: {
+                        Text("Clear Filter")
+                            .font(.subheadline.bold())
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.pink)
+                }
+                .padding()
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 60)
+    }
+    
+    private func moodIcon(for mood: String) -> String {
+        if let matchingMood = Mood.allCases.first(where: { mood.contains($0.rawValue) }) {
+            return matchingMood.icon
+        }
+        return "heart.fill"
+    }
 }
 
 // Subview for the filter capsules
 struct FilterButton: View {
     let title: String
+    var count: Int = 0
     let isSelected: Bool
     let action: () -> Void
     
     var body: some View {
-        Button(action: action) {
+        HStack(spacing: 6) {
             Text(title)
                 .font(.subheadline.bold())
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(isSelected ? Color.pink : Color.pink.opacity(0.1))
-                .foregroundStyle(isSelected ? .white : .pink)
-                .clipShape(Capsule())
+            
+            if count > 0 {
+                Text("(\(count))")
+                    .font(.caption.bold())
+                    .opacity(0.8)
+            }
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(isSelected ? Color.pink : Color.pink.opacity(0.1))
+        .foregroundStyle(isSelected ? .white : .pink)
+        .clipShape(Capsule())
+        // Make the entire area of the capsule sensitive to taps
+        .contentShape(Rectangle())
+        .onTapGesture {
+            // Log for debugging
+            print("Filter tapped: \(title)")
+            if count > 0 || title == "All" {
+                action()
+            }
+        }
+        .opacity(count == 0 && title != "All" ? 0.5 : 1.0)
     }
 }

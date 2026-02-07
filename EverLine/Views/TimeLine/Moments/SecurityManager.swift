@@ -25,6 +25,31 @@ final class SecurityManager {
         }
     }
     
+    /// Check if a PIN has been configured
+    func isPINConfigured() -> Bool {
+        return keychain.read(service: "com.everline.pin", account: "user-pin") != nil
+    }
+    
+    /// Save a PIN securely
+    func savePIN(_ pin: String) {
+        guard let pinData = pin.data(using: .utf8) else { return }
+        keychain.save(pinData, service: "com.everline.pin", account: "user-pin")
+    }
+    
+    /// Verify a PIN
+    func verifyPIN(_ pin: String) -> Bool {
+        guard let storedPINData = keychain.read(service: "com.everline.pin", account: "user-pin"),
+              let storedPIN = String(data: storedPINData, encoding: .utf8) else {
+            return false
+        }
+        return storedPIN == pin
+    }
+    
+    /// Delete the stored PIN
+    func deletePIN() {
+        keychain.delete(service: "com.everline.pin", account: "user-pin")
+    }
+    
     /// Encrypts image data
     func encrypt(_ imageData: Data) -> Data? {
         do {

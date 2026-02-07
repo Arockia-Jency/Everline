@@ -186,7 +186,7 @@ struct ExportView: View {
                 "notes": moment.notes,
                 "date": ISO8601DateFormatter().string(from: moment.date),
                 "mood": moment.mood,
-                "hasPhoto": moment.photoData != nil,
+                "hasPhoto": moment.encryptedPhotoData != nil,
                 "latitude": moment.latitude as Any,
                 "longitude": moment.longitude as Any
             ]

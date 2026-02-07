@@ -57,7 +57,7 @@ class DataMigrationHelper {
     func migrateAllMoments(
         moments: [Moment],
         modelContext: ModelContext,
-        progressCallback: ((Double) -> Void)? = nil
+        progressCallback: (@MainActor (Double) -> Void)? = nil
     ) async -> MigrationResult {
         
         var totalMoments = moments.count
@@ -69,8 +69,8 @@ class DataMigrationHelper {
         for (index, moment) in moments.enumerated() {
             // Update progress
             let progress = Double(index) / Double(totalMoments)
-            await MainActor.run {
-                progressCallback?(progress)
+            if let progressCallback = progressCallback {
+                await progressCallback(progress)
             }
             
             // Check if already encrypted
@@ -85,14 +85,13 @@ class DataMigrationHelper {
             
             // If you kept the old property temporarily for migration:
             // if let oldPhotoData = moment.photoData {
-            //     do {
-            //         let encrypted = try securityManager.encryptPhoto(oldPhotoData)
+            //     if let encrypted = securityManager.encrypt(oldPhotoData) {
             //         moment.encryptedPhotoData = encrypted
             //         moment.photoData = nil  // Clear old field
             //         successCount += 1
-            //     } catch {
+            //     } else {
             //         failedCount += 1
-            //         errors.append("Failed to encrypt moment '\(moment.title)': \(error.localizedDescription)")
+            //         errors.append("Failed to encrypt moment '\(moment.title)'")
             //     }
             // }
         }
@@ -104,8 +103,8 @@ class DataMigrationHelper {
             errors.append("Failed to save migrated data: \(error.localizedDescription)")
         }
         
-        await MainActor.run {
-            progressCallback?(1.0)
+        if let progressCallback = progressCallback {
+            await progressCallback(1.0)
         }
         
         return MigrationResult(
@@ -120,9 +119,12 @@ class DataMigrationHelper {
     // MARK: - Migrate Single Moment
     
     /// Encrypt a single moment's photo
-    func migrateMoment(_ moment: Moment, photoData: Data) throws {
-        let encrypted = try securityManager.encryptPhoto(photoData)
+    func migrateMoment(_ moment: Moment, photoData: Data) -> Bool {
+        guard let encrypted = securityManager.encrypt(photoData) else {
+            return false
+        }
         moment.encryptedPhotoData = encrypted
+        return true
     }
 }
 
@@ -244,10 +246,8 @@ struct MigrationView: View {
             let migrationResult = await helper.migrateAllMoments(
                 moments: moments,
                 modelContext: modelContext
-            ) { newProgress in
-                await MainActor.run {
-                    progress = newProgress
-                }
+            ) { @MainActor newProgress in
+                progress = newProgress
             }
             
             await MainActor.run {

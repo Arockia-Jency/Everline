@@ -7,6 +7,7 @@ import MapKit
 
 struct MomentDetailView: View {
     let moment: Moment
+    var securityManager: SecurityManager
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
@@ -18,13 +19,14 @@ struct MomentDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 // Hero Section (Photo or Mood)
-                if let data = moment.photoData, let uiImage = UIImage(data: data) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(maxWidth: .infinity)
-                        .clipShape(RoundedRectangle(cornerRadius: 24))
-                        .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+                if moment.encryptedPhotoData != nil {
+                    SecureImageView(
+                        encryptedData: moment.encryptedPhotoData,
+                        securityManager: securityManager,
+                        contentMode: .fit,
+                        cornerRadius: 24
+                    )
+                    .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
                 } else {
                     ZStack {
                         RoundedRectangle(cornerRadius: 24)
@@ -92,7 +94,7 @@ struct MomentDetailView: View {
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button {
-                    let renderer = ShareImageRenderer()
+                    let renderer = ShareImageRenderer(securityManager: securityManager)
                     shareImage = renderer.render(moment: moment)
                     isSharing = shareImage != nil
                 } label: {
@@ -125,5 +127,7 @@ struct MomentDetailView: View {
 
 #Preview {
     let m = Moment(title: "Sample", notes: "Notes", mood: "happy")
-    MomentDetailView(moment: m)
+    NavigationStack {
+        MomentDetailView(moment: m, securityManager: SecurityManager())
+    }
 }

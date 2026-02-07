@@ -18,16 +18,16 @@ final class Moment {
     var latitude: Double?
     var longitude: Double?
     
-    // Store high-res photos efficiently outside the database
-    @Attribute(.externalStorage) var photoData: Data?
+    // Store encrypted photo data
+    @Attribute(.externalStorage) var encryptedPhotoData: Data?
     
-    init(title: String = "", notes: String = "", date: Date = .now, mood: String = "❤️ Love", photoData: Data? = nil, latitude: Double? = nil, longitude: Double? = nil) {
+    init(title: String = "", notes: String = "", date: Date = .now, mood: String = "Love", encryptedPhotoData: Data? = nil, latitude: Double? = nil, longitude: Double? = nil) {
         self.id = UUID()
         self.title = title
         self.notes = notes
         self.date = date
         self.mood = mood
-        self.photoData = photoData
+        self.encryptedPhotoData = encryptedPhotoData
         self.latitude = latitude
         self.longitude = longitude
     }
@@ -45,3 +45,4 @@ extension Moment {
         }
     }
 }
+

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 /// A view modifier that blurs the content when the app goes to the background
 struct PrivacyProtectionModifier: ViewModifier {

@@ -5,6 +5,9 @@ struct MainTabView: View {
     @State private var selectedTab: Tab = .timeline
     @State private var isShowingAdd = false
     @State private var isShowingSettings = false
+    
+    // Security Manager instance
+    var securityManager: SecurityManager
 
     enum Tab: String, CaseIterable {
         case timeline = "Timeline"
@@ -25,7 +28,7 @@ struct MainTabView: View {
             Group {
                 switch selectedTab {
                 case .timeline:
-                    TimelineView()
+                    TimelineView(securityManager: securityManager)
                 case .map:
                     NavigationStack { LoveMapView() }
                 case .stats:
@@ -79,10 +82,10 @@ struct MainTabView: View {
             .padding(.bottom, 20)
         }
         .sheet(isPresented: $isShowingAdd) {
-            AddMomentView()
+            AddMomentView(securityManager: securityManager)
         }
         .sheet(isPresented: $isShowingSettings){
-            SettingsView()
+            SecuritySettingsView(securityManager: securityManager)
         }
     }
     @ViewBuilder
@@ -109,6 +112,6 @@ struct MainTabView: View {
 }
 
 #Preview {
-    MainTabView()
+    MainTabView(securityManager: SecurityManager())
         .modelContainer(for: Moment.self, inMemory: true)
 }

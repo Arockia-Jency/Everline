@@ -47,7 +47,7 @@ final class StatsViewModel: ObservableObject {
         self.topMood = counts.max(by: { $0.value < $1.value })?.key ?? "Love"
         
         // 4. Total photos
-        self.totalPhotos = moments.filter { $0.photoData != nil }.count
+        self.totalPhotos = moments.filter { $0.encryptedPhotoData != nil }.count
         
         // 5. Total words in notes
         self.totalWords = moments.reduce(0) { $0 + $1.notes.split(separator: " ").count }

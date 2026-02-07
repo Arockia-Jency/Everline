@@ -8,6 +8,9 @@ struct AddMomentView: View {
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
     
+    // Security Manager for encryption
+    var securityManager: SecurityManager
+    
     // State for the new entry
     @State private var title = ""
     @State private var notes = ""
@@ -26,6 +29,7 @@ struct AddMomentView: View {
     )
 
     @State private var showSuccessFeedback = false
+    @State private var showErrorAlert = false
 
     var body: some View {
         NavigationStack {
@@ -124,16 +128,31 @@ struct AddMomentView: View {
                 }
             }
             .sensoryFeedback(.success, trigger: showSuccessFeedback)
+            .alert("Error", isPresented: $showErrorAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("Failed to encrypt and save the moment. Please try again.")
+            }
         }
     }
     
     private func saveMoment() {
+        // Encrypt photo data if present
+        var encryptedData: Data? = nil
+        if let photoData = selectedData {
+            encryptedData = securityManager.encrypt(photoData)
+            if encryptedData == nil {
+                showErrorAlert = true
+                return
+            }
+        }
+        
         let newMoment = Moment(
             title: title,
             notes: notes,
             date: date,
             mood: selectedMood.rawValue,
-            photoData: selectedData,
+            encryptedPhotoData: encryptedData,
             latitude: location?.latitude,
             longitude: location?.longitude
         )

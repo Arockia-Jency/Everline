@@ -4,4 +4,31 @@
    <FileRef
       location = "self:">
    </FileRef>
+   <FileRef
+      location = "group:SecurityManager.swift">
+   </FileRef>
+   <FileRef
+      location = "group:PINEntryView.swift">
+   </FileRef>
+   <FileRef
+      location = "group:PrivacyBlurView.swift">
+   </FileRef>
+   <FileRef
+      location = "group:SecuritySettingsView.swift">
+   </FileRef>
+   <FileRef
+      location = "group:SecureImageView.swift">
+   </FileRef>
+   <FileRef
+      location = "group:SECURITY_IMPLEMENTATION.md">
+   </FileRef>
+   <FileRef
+      location = "group:InfoPlistConfiguration.swift">
+   </FileRef>
+   <FileRef
+      location = "group:PanicGestureModifier.swift">
+   </FileRef>
+   <FileRef
+      location = "group:QUICK_START.md">
+   </FileRef>
 </Workspace>

@@ -6,11 +6,20 @@ import UIKit
 
 // Helper to render the moment as an image
 struct ShareImageRenderer {
+    var securityManager: SecurityManager?
+    
     @MainActor
     func render(moment: Moment) -> UIImage? {
+        // Decrypt the photo if available
+        var photoImage: UIImage? = nil
+        if let encryptedData = moment.encryptedPhotoData,
+           let manager = securityManager {
+            photoImage = manager.decryptImage(encryptedData)
+        }
+        
         let renderer = ImageRenderer(content:
             VStack(spacing: 20) {
-                if let data = moment.photoData, let uiImage = UIImage(data: data) {
+                if let uiImage = photoImage {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
@@ -24,7 +33,7 @@ struct ShareImageRenderer {
                 }
                 .padding()
                 .frame(width: 400)
-                .background(.white)
+                .background(Color.white)
             }
         )
         return renderer.uiImage
