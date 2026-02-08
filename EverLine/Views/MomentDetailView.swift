@@ -4,6 +4,7 @@
 
 import SwiftUI
 import MapKit
+import SwiftData
 
 struct MomentDetailView: View {
     let moment: Moment
@@ -93,6 +94,16 @@ struct MomentDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
+                Button {
+                    withAnimation {
+                        moment.isFavorite.toggle()
+                        try? modelContext.save()
+                    }
+                } label: {
+                    Image(systemName: moment.isFavorite ? "heart.fill" : "heart")
+                        .foregroundStyle(moment.isFavorite ? .pink : .primary)
+                }
+                
                 Button {
                     let renderer = ShareImageRenderer(securityManager: securityManager)
                     shareImage = renderer.render(moment: moment)
