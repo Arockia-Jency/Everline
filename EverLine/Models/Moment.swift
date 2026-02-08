@@ -17,11 +17,12 @@ final class Moment {
     var mood: String
     var latitude: Double?
     var longitude: Double?
+    var isFavorite: Bool = false
     
     // Store encrypted photo data
     @Attribute(.externalStorage) var encryptedPhotoData: Data?
     
-    init(title: String = "", notes: String = "", date: Date = .now, mood: String = "Love", encryptedPhotoData: Data? = nil, latitude: Double? = nil, longitude: Double? = nil) {
+    init(title: String = "", notes: String = "", date: Date = .now, mood: String = "Love", encryptedPhotoData: Data? = nil, latitude: Double? = nil, longitude: Double? = nil, isFavorite: Bool = false) {
         self.id = UUID()
         self.title = title
         self.notes = notes
@@ -30,6 +31,7 @@ final class Moment {
         self.encryptedPhotoData = encryptedPhotoData
         self.latitude = latitude
         self.longitude = longitude
+        self.isFavorite = isFavorite
     }
 }
 

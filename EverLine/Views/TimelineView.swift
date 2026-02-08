@@ -6,40 +6,12 @@ struct TimelineView: View {
     @Query(sort: \Moment.date, order: .reverse) private var moments: [Moment]
     @State private var searchText = ""
     @State private var selectedMoodFilter: String? = nil
-    @State private var selectedDateRange: DateRangeFilter = .all
     @State private var showFavoritesOnly = false
     
     // Security Manager for photo decryption
     var securityManager: SecurityManager
     
-    // Date range filter options
-    enum DateRangeFilter: String, CaseIterable {
-        case all = "All Time"
-        case today = "Today"
-        case week = "This Week"
-        case month = "This Month"
-        case year = "This Year"
-        
-        func matches(date: Date) -> Bool {
-            let calendar = Calendar.current
-            let now = Date()
-            
-            switch self {
-            case .all:
-                return true
-            case .today:
-                return calendar.isDateInToday(date)
-            case .week:
-                return calendar.isDate(date, equalTo: now, toGranularity: .weekOfYear)
-            case .month:
-                return calendar.isDate(date, equalTo: now, toGranularity: .month)
-            case .year:
-                return calendar.isDate(date, equalTo: now, toGranularity: .year)
-            }
-        }
-    }
-    
-    // Filtered list based on search, mood, and date range
+    // Filtered list based on search and mood
     var filteredMoments: [Moment] {
         moments.filter { moment in
             let matchesSearch = searchText.isEmpty || 
@@ -55,11 +27,9 @@ struct TimelineView: View {
                 matchesMood = true
             }
             
-            let matchesDateRange = selectedDateRange.matches(date: moment.date)
-            
             let matchesFavorite = showFavoritesOnly ? moment.isFavorite : true
             
-            return matchesSearch && matchesMood && matchesDateRange && matchesFavorite
+            return matchesSearch && matchesMood && matchesFavorite
         }
     }
     
@@ -91,29 +61,7 @@ struct TimelineView: View {
                         .padding(.horizontal)
                     }
                     
-                    // 2. Date Range Filter (New!)
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 10) {
-                            ForEach(DateRangeFilter.allCases, id: \.self) { range in
-                                Button {
-                                    withAnimation(.spring(response: 0.3)) {
-                                        selectedDateRange = range
-                                    }
-                                } label: {
-                                    Text(range.rawValue)
-                                        .font(.caption.bold())
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 6)
-                                        .background(selectedDateRange == range ? Color.blue : Color.blue.opacity(0.1))
-                                        .foregroundStyle(selectedDateRange == range ? .white : .blue)
-                                        .clipShape(Capsule())
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                    
-                    // 3. The Timeline List
+                    // 2. The Timeline List
                     if filteredMoments.isEmpty {
                         emptyStateView
                     } else {

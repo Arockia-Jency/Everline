@@ -15,10 +15,39 @@ struct SettingsView: View {
     
     @State private var showDeleteAllAlert = false
     @State private var showExportSheet = false
+    @State private var relationshipStartDate: Date
+    
+    init() {
+        // Initialize from UserDefaults
+        if let saved = UserDefaults.standard.object(forKey: "relationshipStartDate") as? Date {
+            _relationshipStartDate = State(initialValue: saved)
+        } else {
+            _relationshipStartDate = State(initialValue: Calendar.current.date(from: DateComponents(year: 2021, month: 1, day: 1)) ?? .now)
+        }
+    }
     
     var body: some View {
         NavigationStack {
             List {
+                Section("Relationship") {
+                    DatePicker(
+                        "Start Date",
+                        selection: $relationshipStartDate,
+                        displayedComponents: .date
+                    )
+                    .onChange(of: relationshipStartDate) { _, newValue in
+                        UserDefaults.standard.set(newValue, forKey: "relationshipStartDate")
+                    }
+                    
+                    HStack {
+                        Text("Days Together")
+                        Spacer()
+                        Text("\(daysTogether)")
+                            .foregroundStyle(.secondary)
+                            .font(.headline)
+                    }
+                }
+                
                 Section("About") {
                     HStack {
                         Text("Total Moments")
@@ -93,6 +122,10 @@ struct SettingsView: View {
             modelContext.delete(moment)
         }
         try? modelContext.save()
+    }
+    
+    private var daysTogether: Int {
+        Calendar.current.dateComponents([.day], from: relationshipStartDate, to: .now).day ?? 0
     }
 }
 

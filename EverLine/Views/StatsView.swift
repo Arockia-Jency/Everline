@@ -31,11 +31,18 @@ final class StatsViewModel: ObservableObject {
         // 1. Total moments
         self.totalMoments = moments.count
         
-        // 2. Days together (from first moment to now)
-        if let firstMoment = moments.sorted(by: { $0.date < $1.date }).first {
+        // 2. Days together (from user-selected start date to now)
+        if let startDate = UserDefaults.standard.object(forKey: "relationshipStartDate") as? Date {
+            let calendar = Calendar.current
+            let components = calendar.dateComponents([.day], from: startDate, to: Date())
+            self.daysTogether = components.day ?? 0
+        } else if let firstMoment = moments.sorted(by: { $0.date < $1.date }).first {
+            // Fallback: Use first moment if no start date is set
             let calendar = Calendar.current
             let components = calendar.dateComponents([.day], from: firstMoment.date, to: Date())
             self.daysTogether = components.day ?? 0
+        } else {
+            self.daysTogether = 0
         }
         
         // 3. Mood counts and top mood
@@ -174,6 +181,10 @@ struct StatsView: View {
             }
             .onChange(of: moments) { _, newMoments in
                 vm.compute(from: newMoments)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)) { _ in
+                // Recompute when UserDefaults changes (including start date)
+                vm.compute(from: moments)
             }
         }
     }

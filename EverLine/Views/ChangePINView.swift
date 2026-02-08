@@ -17,6 +17,7 @@ struct ChangePINView: View {
     @State private var step: Step = .current
     @State private var errorMessage = ""
     @State private var showError = false
+    @State private var showSuccess = false
     
     enum Step {
         case current
@@ -112,6 +113,13 @@ struct ChangePINView: View {
             } message: {
                 Text(errorMessage)
             }
+            .alert("PIN Changed", isPresented: $showSuccess) {
+                Button("Done") {
+                    dismiss()
+                }
+            } message: {
+                Text("Your PIN has been successfully updated.")
+            }
         }
     }
     
@@ -190,8 +198,8 @@ struct ChangePINView: View {
             if confirmPIN == newPIN {
                 securityManager.savePIN(newPIN)
                 
-                // Show success and dismiss
-                dismiss()
+                // Show success
+                showSuccess = true
             } else {
                 errorMessage = "PINs don't match. Please try again."
                 showError = true
